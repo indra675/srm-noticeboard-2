@@ -51,6 +51,8 @@ h1,h2,h3,h4,.d{font-family:"Bricolage Grotesque",Figtree,sans-serif}
 .pj{margin-top:16px}.pj b{display:block;font:700 clamp(16px,2.3vw,22px) "Bricolage Grotesque";color:var(--w)}.pj span{font-size:13px;color:var(--mut)}
 .cp{max-width:68ch;margin:18px auto 0;font-size:14px;line-height:1.85;color:var(--mut)}.cp b{color:var(--fg);font-weight:700}
 #pct{font:800 clamp(28px,5vw,44px) "Bricolage Grotesque";margin-top:20px;font-variant-numeric:tabular-nums;background:linear-gradient(120deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+#bn{display:none;margin-top:6px;font-size:13px;color:var(--mut);text-align:center;padding:0 10px;font-variant-numeric:tabular-nums}
+#bn.show{display:block}
 #bs{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:6px;font-size:14px;color:var(--mut);padding:0 10px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--mut);flex:none;transition:background .4s}
 .on .dot,.dot.on{background:var(--ok);animation:pulse 2s infinite}.bad .dot,.dot.bad{background:var(--bad)}
@@ -238,7 +240,8 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stro
   <div class="pj" style="--i:5"><b>SRM AP Smart IoT Notice Board</b><span>ESP32/ESP8266-Based Intelligent Campus Information System</span></div>
   <p class="cp" style="--i:6">Developed by : <b>G. IndraNag, M. Jayantha Siva Srinivas, P. Joshi, P.M. Shoaib Khan, SK. Imran</b><br>Under the Guidance Of : <b>Anil Dasaroju</b>, Embedded &amp; IoT Trainer, SRM University AP<br>Special Thanks to : <b>A BalaMurugan</b> (Head Skill Development), <b>A Sagar</b> (Manager Skill Development)</p>
   <div id="pct" style="--i:7">0</div>
-  <div id="bs" style="--i:7"><i class="dot"></i><span id="bt">Scanning for the ESP8266 board</span></div>
+  <div id="bs" style="--i:7"><i class="dot"></i><span id="bt">F.R.I.D.A.Y. is scanning for the ESP8266 board</span></div>
+  <div id="bn" aria-live="polite"></div>
   <div id="dur" style="--i:8"><span><b id="don">--</b><small id="dol">Online for</small></span><span><b id="dof">--</b><small id="dfl">Offline for</small></span></div>
  </div>
 </section>
@@ -336,10 +339,13 @@ const fmtD=s=>s<60?Math.round(s)+" s":s<3600?Math.floor(s/60)+" min "+Math.round
 function dur(){const d=B.d;if(!B.ok||!d)return;const sn=d.board_seen&&new Date(d.board_seen).getFullYear()>2001?new Date(d.board_seen).getTime():null,up=d.uptime_s!=null?+d.uptime_s:null;
  if(B.on){$("don").textContent=up==null||sn==null?"--":fmtD(up+(Date.now()-sn)/1000);$("dol").textContent="Online for";$("dof").textContent=prevOff==null?"--":fmtD(prevOff);$("dfl").textContent="Last offline for"}
  else{$("don").textContent=up==null||sn==null?"--":fmtD(up);$("dol").textContent="Last online for";$("dof").textContent=sn==null?"No heartbeat yet":fmtD((Date.now()-sn)/1000);$("dfl").textContent="Offline for"}}
-function label(){const a=age(),b=$("bs"),t=$("bt");
- if(!B.ok){b.className="";t.textContent="Scanning for the ESP8266 board"}
- else if(B.on){b.className="on";t.textContent=open?"ESP8266 online":"ESP8266 online. Systems nominal, opening the board"}
- else{b.className="bad";t.textContent="ESP8266 is offline. New element is not found, connect the ESP8266 to open new element"}
+const fmtDT=ms=>new Date(ms).toLocaleString(undefined,{year:"numeric",month:"2-digit",day:"2-digit",hour:"numeric",minute:"2-digit",second:"2-digit"});
+function label(){const a=age(),b=$("bs"),t=$("bt"),n=$("bn");
+ if(!B.ok){b.className="";t.textContent="F.R.I.D.A.Y. is scanning for the ESP8266 board";n.className=""}
+ else if(B.on){b.className="on";t.textContent=open?"ESP8266 online":"ESP8266 online. Systems nominal, opening the board";n.className=""}
+ else{b.className="bad";t.textContent="ESP8266 is off. Power it on to open the notice board.";
+  const sn=B.d&&B.d.board_seen&&new Date(B.d.board_seen).getFullYear()>2001?new Date(B.d.board_seen).getTime():null;
+ n.textContent=sn==null?"New element not found. Now: "+fmtDT(Date.now()):"New element not found: last found at "+fmtDT(sn)+" ("+Math.round((Date.now()-sn)/6e4)+" min ago)";n.className="show"}
  $("ct").textContent=B.on?"Board online, synced "+(a==null?0:a)+"s ago":"Board offline";$("cd").className="dot "+(B.on?"on":"bad")}
 function gate(){
  if(!B.ok||!introDone)return;
